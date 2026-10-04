@@ -1,0 +1,16 @@
+{
+  "name": "ai-qa",
+  "version": "1.0.0",
+  "description": "AI 答疑助手：检索课程资料后调用大模型作答（原生 Node.js 实现，零第三方依赖）",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["ai", "qa", "rag", "nodejs"],
+  "license": "MIT"
+}

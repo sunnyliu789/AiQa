@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 答疑助手</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div>
+        <h1>AI 答疑助手</h1>
+        <p class="subtitle">先检索课程资料，再交给大模型作答</p>
+      </div>
+      <span id="modeBadge" class="badge badge-loading">状态检测中…</span>
+    </header>
+
+    <main class="main">
+      <section class="panel">
+        <form id="askForm" class="ask-form">
+          <textarea
+            id="question"
+            class="question"
+            rows="4"
+            placeholder="请输入你的课程问题，例如：什么是检索增强生成（RAG）？"
+            maxlength="1000"
+          ></textarea>
+          <div class="ask-actions">
+            <span class="hint">支持中文提问，回车换行，点击按钮提交</span>
+            <button id="askBtn" type="submit" class="btn-primary">提交提问</button>
+          </div>
+        </form>
+
+        <div id="error" class="error hidden"></div>
+
+        <article id="result" class="result hidden">
+          <div class="result-head">
+            <h2>回答</h2>
+            <span id="resultMode" class="badge"></span>
+          </div>
+          <div id="answer" class="answer"></div>
+          <div id="sources" class="sources"></div>
+        </article>
+      </section>
+
+      <aside class="panel history-panel">
+        <div class="history-head">
+          <h2>历史记录</h2>
+          <button id="refreshBtn" type="button" class="btn-ghost">刷新</button>
+        </div>
+        <ul id="history" class="history">
+          <li class="history-empty">暂无记录</li>
+        </ul>
+      </aside>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
