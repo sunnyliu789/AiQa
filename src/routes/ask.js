@@ -10,7 +10,7 @@
 
 const retriever = require('../services/retriever');
 const llm = require('../services/llm');
-const qaStore = require('../store/qaStore');
+const qaRecord = require('../record/qaRecord');
 
 /**
  * 读取并解析 JSON 请求体
@@ -81,7 +81,7 @@ async function handleAsk(req, res) {
     const { content, mode } = await llm.answer(question, contexts);
 
     // 步骤 3：保存问答记录
-    const record = qaStore.add({
+    const record = qaRecord.add({
       question,
       answer: content,
       sources: contexts.map((c) => c.title),
@@ -117,7 +117,7 @@ async function handleAsk(req, res) {
  */
 function handleHistory(req, res, url) {
   const limit = Number(url.searchParams.get('limit')) || 20;
-  const records = qaStore.list(limit);
+  const records = qaRecord.list(limit);
   return sendJson(res, 200, { ok: true, data: records });
 }
 

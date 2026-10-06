@@ -34,7 +34,7 @@ function readAll() {
     return Array.isArray(data) ? data : [];
   } catch (err) {
     // 文件损坏时不应影响接口，降级为空记录
-    console.warn('[qaStore] 读取问答记录失败：', err.message);
+    console.warn('[qaRecord] 读取问答记录失败：', err.message);
     return [];
   }
 }
