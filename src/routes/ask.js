@@ -6,11 +6,13 @@
  * - POST /api/ask     提问（检索资料 → 调用大模型 → 保存记录）
  * - GET  /api/history 查询历史问答记录
  * - GET  /api/status  查询当前运行模式（演示模式 / 大模型模式）
+ * - GET  /api/stats   查询每日提问量统计
  */
 
 const retriever = require('../services/retriever');
 const llm = require('../services/llm');
 const qaRecord = require('../record/qaRecord');
+const { countQuestionsByDay } = require('../utils/stats');
 
 /**
  * 读取并解析 JSON 请求体
@@ -138,6 +140,23 @@ function handleStatus(req, res) {
 }
 
 /**
+ * 处理每日提问量统计
+ * @param {import('http').IncomingMessage} req 请求对象
+ * @param {import('http').ServerResponse} res 响应对象
+ */
+function handleStats(req, res) {
+  // 统计需要全部记录，因此用 readAll 而非默认只取 20 条的 list
+  const byDay = countQuestionsByDay(qaRecord.readAll());
+
+  // 按日期升序转成数组，便于前端直接按顺序画图
+  const days = Object.keys(byDay)
+    .sort()
+    .map((date) => ({ date, count: byDay[date] }));
+
+  return sendJson(res, 200, { ok: true, data: { days } });
+}
+
+/**
  * 路由分发入口
  * @param {import('http').IncomingMessage} req 请求对象
  * @param {import('http').ServerResponse} res 响应对象
@@ -159,7 +178,11 @@ function handle(req, res, url) {
     handleStatus(req, res);
     return true;
   }
+  if (pathname === '/api/stats' && req.method === 'GET') {
+    handleStats(req, res);
+    return true;
+  }
   return false;
 }
 
-module.exports = { handle, handleAsk, handleHistory, handleStatus };
+module.exports = { handle, handleAsk, handleHistory, handleStatus, handleStats };

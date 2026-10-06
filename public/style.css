@@ -261,3 +261,70 @@ body {
 .hidden {
   display: none;
 }
+
+/* 每日提问量统计 */
+.stats-panel {
+  grid-column: 1 / -1;
+}
+
+.stats-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stats-head h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.stats-total {
+  color: var(--text-weak);
+  font-size: 12px;
+}
+
+.stats-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  min-height: 96px;
+  overflow-x: auto;
+}
+
+.bar-item {
+  flex: 0 0 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.bar-value {
+  color: var(--text-weak);
+  font-size: 12px;
+}
+
+.bar {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  background: var(--primary);
+  transition: opacity 0.2s;
+}
+
+.bar-item:hover .bar {
+  opacity: 0.72;
+}
+
+.bar-label {
+  color: var(--text-weak);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.stats-empty {
+  margin: 0;
+  color: var(--text-weak);
+  font-size: 14px;
+}

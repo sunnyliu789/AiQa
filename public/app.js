@@ -2,7 +2,7 @@
 
 /**
  * 前端交互逻辑（原生 JavaScript，不依赖任何框架）
- * 功能：提交提问、展示回答与引用资料、查看历史记录、展示运行模式。
+ * 功能：提交提问、展示回答与引用资料、查看历史记录、展示运行模式、展示每日提问量统计。
  */
 
 const els = {
@@ -16,7 +16,9 @@ const els = {
   resultMode: document.getElementById('resultMode'),
   modeBadge: document.getElementById('modeBadge'),
   history: document.getElementById('history'),
-  refreshBtn: document.getElementById('refreshBtn')
+  refreshBtn: document.getElementById('refreshBtn'),
+  statsChart: document.getElementById('statsChart'),
+  statsTotal: document.getElementById('statsTotal')
 };
 
 /**
@@ -111,6 +113,7 @@ async function handleSubmit(event) {
     });
     renderAnswer(data);
     loadHistory();
+    loadStats();
   } catch (err) {
     showError(err.message);
   } finally {
@@ -163,8 +166,77 @@ async function loadHistory() {
   }
 }
 
+/** 柱状图的最大高度（像素） */
+const BAR_MAX_HEIGHT = 100;
+
+/**
+ * 渲染每日提问量柱状图
+ * @param {{date: string, count: number}[]} days 按日期升序的统计结果
+ */
+function renderStats(days) {
+  els.statsChart.innerHTML = '';
+
+  if (!days.length) {
+    els.statsTotal.textContent = '';
+    const empty = document.createElement('p');
+    empty.className = 'stats-empty';
+    empty.textContent = '暂无数据';
+    els.statsChart.appendChild(empty);
+    return;
+  }
+
+  const max = Math.max(...days.map((day) => day.count));
+  const total = days.reduce((sum, day) => sum + day.count, 0);
+  els.statsTotal.textContent = `共 ${total} 次提问，覆盖 ${days.length} 天`;
+
+  days.forEach((day) => {
+    const item = document.createElement('div');
+    item.className = 'bar-item';
+
+    const value = document.createElement('div');
+    value.className = 'bar-value';
+    value.textContent = String(day.count);
+
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    // 按当天次数与最大值等比换算高度，最少的也保留 4px 以保证可见
+    bar.style.height = `${Math.max(4, Math.round((day.count / max) * BAR_MAX_HEIGHT))}px`;
+    bar.title = `${day.date}：${day.count} 次`;
+
+    const label = document.createElement('div');
+    label.className = 'bar-label';
+    // 只显示月-日，避免年份挤占空间
+    label.textContent = day.date.slice(5);
+
+    item.appendChild(value);
+    item.appendChild(bar);
+    item.appendChild(label);
+    els.statsChart.appendChild(item);
+  });
+}
+
+/** 加载每日提问量统计 */
+async function loadStats() {
+  try {
+    const data = await request('/api/stats');
+    renderStats(data.days || []);
+  } catch (err) {
+    // 统计加载失败不阻断主流程，仅在图表区域提示
+    els.statsTotal.textContent = '';
+    els.statsChart.innerHTML = '';
+    const empty = document.createElement('p');
+    empty.className = 'stats-empty';
+    empty.textContent = `统计加载失败：${err.message}`;
+    els.statsChart.appendChild(empty);
+  }
+}
+
 // 事件绑定与初始化
 els.form.addEventListener('submit', handleSubmit);
-els.refreshBtn.addEventListener('click', loadHistory);
+els.refreshBtn.addEventListener('click', () => {
+  loadHistory();
+  loadStats();
+});
 loadStatus();
 loadHistory();
+loadStats();
