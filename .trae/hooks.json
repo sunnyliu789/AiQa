@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "RunCommand",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .trae/check_command.js",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
