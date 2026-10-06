@@ -18,10 +18,25 @@
 
 const fs = require('fs');
 
-// 需要人工授权的危险规则：正则中的 \b 为单词边界，避免误伤 format、perform 等含 rm 的单词
+/**
+ * 需要人工授权的危险规则
+ *
+ * rm 是 shell 命令，只有处于「命令位置」才算危险操作——即位于行首，
+ * 或紧跟在 ; && || | ( ) 换行 之后，或跟在 sudo / git / xargs 等常见
+ * 前缀命令之后。这样可避免把提交信息、echo 文本、文件名里的 rm 误判。
+ *
+ * DROP TABLE 不同：它通常作为 SQL 字符串参数出现（如 mysql -e "DROP TABLE t"），
+ * 任意位置命中都应视为高危，因此按子串匹配。
+ */
 const DANGEROUS_RULES = [
-  { name: '删除文件（rm）', pattern: /\brm\b/i },
-  { name: '删除数据表（DROP TABLE）', pattern: /\bdrop\s+table\b/i }
+  {
+    name: '删除文件（rm）',
+    pattern: /(?:^|[;&|()\r\n]|\b(?:sudo|doas|git|time|xargs|command|env|nohup)\s+)\s*rm(?=\s|$)/i
+  },
+  {
+    name: '删除数据表（DROP TABLE）',
+    pattern: /\bdrop\s+table\b/i
+  }
 ];
 
 /**
