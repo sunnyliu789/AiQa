@@ -1,16 +1,25 @@
 // @ts-check
-/** @type {import('@playwright/test').PlaywrightTestConfig} */
-// 只有真正在 GitHub Actions runner 上才为 true；
-// 用 GITHUB_ACTIONS 比 CI 更精准（Trae 沙箱也会预设 CI=true，但不会有 GITHUB_ACTIONS）
-const isGH = process.env.GITHUB_ACTIONS === 'true';
+const { existsSync } = require('fs');
+const { defineConfig } = require('@playwright/test');
 
-const config = {
+// CI（GitHub Actions 会自动注入 CI=true）统一使用 Playwright 自带 Chromium；
+// 本地开发复用本机已安装的 Chrome，避免额外下载浏览器。
+const isCI = String(process.env.CI).toLowerCase() === 'true';
+
+// 本机 Chrome 路径：仅在非 CI 且文件真实存在时启用，
+// 否则回退到 Playwright 自带的 chromium，避免写死路径导致 "Executable doesn't exist"。
+const WIN_CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+const localChrome =
+  !isCI && process.platform === 'win32' && existsSync(WIN_CHROME) ? WIN_CHROME : null;
+
+module.exports = defineConfig({
   testDir: './tests',
   testMatch: '**/*.e2e.spec.js',
+  outputDir: 'test-results',
   timeout: 30_000,
   fullyParallel: true,
-  forbidOnly: isGH,
-  retries: isGH ? 1 : 0,
+  forbidOnly: isCI,
+  retries: isCI ? 1 : 0,
   workers: 1,
   reporter: [
     ['list'],
@@ -21,35 +30,31 @@ const config = {
     viewport: { width: 1280, height: 800 },
     actionTimeout: 10_000,
     navigationTimeout: 15_000,
-    // CI 用 Playwright 自带 headless chromium；本地开发复用本机 Chrome，省一次下载
-    ...(isGH
+    headless: isCI,
+    // 本地：走本机 Chrome；CI：不指定 channel/executablePath，使用
+    // `npx playwright install chromium` 安装的自带 Chromium。
+    ...(localChrome
       ? {
-          browserName: 'chromium',
-          headless: true
-        }
-      : {
           channel: 'chrome',
-          headless: false,
           launchOptions: {
-            executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+            executablePath: localChrome,
             args: ['--new-window', '--no-first-run', '--no-default-browser-check']
           }
-        })
+        }
+      : { browserName: 'chromium' })
   },
   projects: [
     {
-      name: isGH ? 'chromium' : 'chrome-local'
+      name: localChrome ? 'chrome-local' : 'chromium'
     }
   ],
-  // CI 自动拉起服务，本地开发手动 npm start
-  webServer: isGH
-    ? {
-        command: 'npm start',
-        port: 3000,
-        reuseExistingServer: true,
-        timeout: 20_000
-      }
-    : undefined
-};
-
-module.exports = config;
+  // 无论本地还是 CI 都由 Playwright 兜底拉起服务；
+  // 本地已有服务时直接复用，CI 上强制自己启动，避免误用残留进程。
+  // 用接口地址而非端口探测，确保路由真正就绪，消除启动竞态。
+  webServer: {
+    command: 'npm start',
+    url: 'http://localhost:3000/api/status',
+    reuseExistingServer: !isCI,
+    timeout: 20_000
+  }
+});

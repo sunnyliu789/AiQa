@@ -11,6 +11,11 @@ npm-debug.log*
 # 运行时数据（问答记录由程序自动生成）
 data/qa-records.json
 
+# Playwright 产物（每次测试重新生成，不入库）
+playwright-report/
+test-results/
+blob-report/
+
 # 操作系统与编辑器文件
 .DS_Store
 Thumbs.db
